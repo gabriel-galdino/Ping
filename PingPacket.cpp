@@ -16,6 +16,7 @@ std::vector<uint8_t> PingPacket::serialize(){
 }
 
 int PingPacket::sendPacket(){
+    int nbytes;
     int sock_fd;
     struct sockaddr_in address;
     bzero(&address, sizeof(address));
@@ -24,8 +25,8 @@ int PingPacket::sendPacket(){
         std::cout << "Erro na conversão da string para endereço IP" << std::endl;
     std::vector<uint8_t> serialzedPacket = serialize();
     if((sock_fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) > 0){
-        struct sockaddr* addr = reinterpret_cast<sockaddr*>(&address);
-        return sendto(sock_fd, serialzedPacket.data(), serialzedPacket.size(), 0, addr, sizeof(sockaddr));
+        struct sockaddr* convertedAddr = reinterpret_cast<sockaddr*>(&address);
+        return sendto(sock_fd, serialzedPacket.data(), serialzedPacket.size(), 0, convertedAddr, sizeof(sockaddr));
     }
     else std::cout << "erro " << sock_fd << std::endl;
     return -1;
