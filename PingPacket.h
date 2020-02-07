@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <cstring>
+#include <iomanip>
 #include <vector>
 #include <iostream>
 #include <unistd.h>
@@ -7,19 +8,24 @@
 #include <sys/socket.h> 
 #include <arpa/inet.h>
 
+
 class PingPacket{
-    uint8_t type;
-    uint8_t code;
-    uint16_t checksum = 0;
-    uint16_t identifier;
-    uint16_t sequenceNumber;
+private:
+    uint8_t _type = 8;
+    uint8_t _code;
+    uint16_t _checksum = 0;
+    uint16_t _identifier;
+    uint16_t _sequenceNumber;
 public:
     PingPacket(uint8_t type, uint8_t code, uint16_t identifier, uint16_t sequenceNumber){
-        type = type;
-        code = code;
-        identifier = identifier;
-        sequenceNumber = sequenceNumber;
+        _type = type;
+        _code = code;
+        _identifier = identifier;
+        _sequenceNumber = sequenceNumber;
     }
     std::vector<uint8_t> serialize();
     int sendPacket();
+    void printPacket(std::vector<uint8_t>);
+    // uint16_t calculateChecksum(void*, size_t);
+    uint16_t calculateChecksum(std::vector<uint8_t>);
 };
