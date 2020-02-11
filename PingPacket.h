@@ -2,10 +2,12 @@
 #include <cstring>
 #include <iomanip>
 #include <vector>
+#include <string>
 #include <iostream>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/socket.h> 
+#include <sys/socket.h>
+#include <sys/select.h> 
 #include <arpa/inet.h>
 
 
@@ -24,8 +26,8 @@ public:
         _sequenceNumber = sequenceNumber;
     }
     std::vector<uint8_t> serialize();
-    int sendPacket();
-    void printPacket(std::vector<uint8_t>);
-    // uint16_t calculateChecksum(void*, size_t);
     uint16_t calculateChecksum(std::vector<uint8_t>);
+    int sendPacket();
+    void extractIcmpHeader(std::vector<uint8_t>);
+    void printPacket(std::vector<uint8_t>);
 };
