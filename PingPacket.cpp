@@ -30,7 +30,7 @@ std::vector<uint8_t> PingPacket::serialize(){
 
 int PingPacket::sendPacket(){
     bool pingLoop = true;
-    int sockfd, nsent, nread, seqNum;
+    int sockfd, nsent, nread;
     std::vector<uint8_t> packet;
     std::vector<uint8_t> recvdPacket(1024);
     struct sockaddr_in address;
@@ -53,7 +53,7 @@ int PingPacket::sendPacket(){
     
     while(pingLoop){
         packet = serialize();
-        printPacket(packet);
+        // printPacket(packet);
         struct sockaddr* convertedAddr = reinterpret_cast<sockaddr*>(&address);
         
         if(nsent = sendto(sockfd, packet.data(), packet.size(), 0, convertedAddr, sizeof(sockaddr))){
@@ -73,25 +73,28 @@ int PingPacket::sendPacket(){
         else
         {
           std::cout << std::dec << nread << std::endl;
-          // for(int i = 0; i < 28; i++){
-          //   std::cout << std::hex << ntohs(recvdPacket[i]) << std::endl;
-          // }
-          extractIcmpHeader(recvdPacket);
+          deserialize(recvdPacket);
         }
-        pingLoop = false;
+        sleep(1);
     }
     return 0;
 
 }
 
-void PingPacket::extractIcmpHeader(std::vector<uint8_t> recvdPacket){
-  std::vector<uint8_t> icmpHeader;
-  for(int i = 20; i < 28; i+=2){
-      std::cout << std::hex << ntohs(recvdPacket[i] + recvdPacket[i + 1] * 256) << std::endl;
+void PingPacket::extractIcmpHeader(std::vector<uint8_t>& recvdPacket){
+  std::vector<uint8_t> replyPacket;
+  for(int i = 20; i < 28; i++){
+      // std::cout << std::hex << ntohs(recvdPacket[i] + recvdPacket[i + 1] * 256) << std::endl;
+      replyPacket.push_back(recvdPacket[i]);
   }
+  recvdPacket = replyPacket;
 }
 
-uint16_t PingPacket::calculateChecksum(std::vector<uint8_t> serializedData){
+void PingPacket::incrementSequenceNumber(){
+  std::cout << ++_sequenceNumber << std::endl; 
+}
+
+uint16_t PingPacket::calculateChecksum(std::vector<uint8_t>& serializedData){
     uint32_t sum = 0;
     for(int i = 0; i < serializedData.size(); i+=2){
         sum += (serializedData[i] << 8) + serializedData[i + 1];
@@ -99,6 +102,19 @@ uint16_t PingPacket::calculateChecksum(std::vector<uint8_t> serializedData){
     if(serializedData.size() & 1)
         sum += serializedData[serializedData.size() - 1];        
     return htons(~sum);
+}
+
+void PingPacket::deserialize(std::vector<uint8_t>& recvdPacket){
+  extractIcmpHeader(recvdPacket);
+  _type = 8;
+  _code = recvdPacket[1];
+  _checksum = ntohs(recvdPacket[2] + recvdPacket[3] * 256);
+  _identifier = ntohs(recvdPacket[4] + recvdPacket[5] * 256);
+  _sequenceNumber = ntohs(recvdPacket[6] + recvdPacket[7] * 256);
+  incrementSequenceNumber();
+  _identifier = htons(_identifier);
+  _sequenceNumber = htons(_sequenceNumber);
+
 }
 
 void PingPacket::printPacket(std::vector<uint8_t> data){
@@ -110,4 +126,3 @@ void PingPacket::printPacket(std::vector<uint8_t> data){
                   << std::endl;
     }
 }
-

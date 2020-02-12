@@ -26,8 +26,10 @@ public:
         _sequenceNumber = sequenceNumber;
     }
     std::vector<uint8_t> serialize();
-    uint16_t calculateChecksum(std::vector<uint8_t>);
+    void deserialize(std::vector<uint8_t>&);
+    uint16_t calculateChecksum(std::vector<uint8_t>&);
     int sendPacket();
-    void extractIcmpHeader(std::vector<uint8_t>);
+    void extractIcmpHeader(std::vector<uint8_t>&);
+    void incrementSequenceNumber();
     void printPacket(std::vector<uint8_t>);
 };
